@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(15);
 
 -- usuários de teste (o gatilho cria os perfis)
 insert into auth.users (id, email) values
@@ -12,6 +12,9 @@ select ok(
     where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b')) = 2,
   'gatilho cria perfil no cadastro'
 );
+
+-- apelido já existente, para testar duplicidade sem diferenciar maiúsculas
+update public.profiles set nickname = 'Maria_B' where id = '00000000-0000-0000-0000-00000000000b';
 
 -- anônimo
 set local role anon;
@@ -59,6 +62,29 @@ select throws_ok(
   $$update public.profiles set role = 'moderator'
     where id = '00000000-0000-0000-0000-00000000000a'$$,
   '42501', null, 'usuário não se promove a moderador'
+);
+
+-- apelido
+select lives_ok(
+  $$update public.profiles set nickname = 'ana_a' where id = '00000000-0000-0000-0000-00000000000a'$$,
+  'usuário define o próprio apelido'
+);
+select is(
+  (select nickname from public.profiles where id = '00000000-0000-0000-0000-00000000000a'), 'ana_a',
+  'apelido foi gravado'
+);
+select throws_ok(
+  $$update public.profiles set nickname = 'a!' where id = '00000000-0000-0000-0000-00000000000a'$$,
+  '23514', null, 'apelido com formato inválido é recusado'
+);
+select throws_ok(
+  $$update public.profiles set nickname = 'MARIA_B' where id = '00000000-0000-0000-0000-00000000000a'$$,
+  '23505', null, 'apelido repetido (ignorando maiúsculas) é recusado'
+);
+update public.profiles set nickname = 'invadido' where id = '00000000-0000-0000-0000-00000000000b';
+select is(
+  (select nickname from public.profiles where id = '00000000-0000-0000-0000-00000000000b'), 'Maria_B',
+  'usuário não altera o apelido de outra pessoa'
 );
 
 select * from finish();

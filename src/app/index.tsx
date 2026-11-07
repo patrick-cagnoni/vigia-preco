@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuth } from '@/src/lib/auth';
 import { supabase } from '@/src/lib/supabase';
 import { useColors } from '@/src/lib/theme';
 
@@ -17,6 +18,7 @@ type Product = {
 
 export default function Index() {
   const colors = useColors();
+  const { nickname } = useAuth();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +53,7 @@ export default function Index() {
           <Text style={{ color: colors.primary }}>Sair</Text>
         </Pressable>
       </View>
+      <Text style={[styles.greeting, { color: colors.muted }]}>Olá, {nickname}</Text>
 
       {loading && <ActivityIndicator style={styles.center} color={colors.muted} />}
 
@@ -85,6 +88,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   title: { fontSize: 28, fontWeight: '700' },
+  greeting: { marginBottom: 12 },
   center: { marginTop: 32 },
   message: { marginTop: 16 },
   row: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
