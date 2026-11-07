@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { supabase } from '@/src/lib/supabase';
+import { useColors } from '@/src/lib/theme';
 
 // Tela provisória: só prova que o app consegue ler o banco.
 // Será substituída pela tela inicial de verdade (busca, ofertas próximas).
@@ -14,14 +15,8 @@ type Product = {
   quantity: number;
 };
 
-// Cores por tema (o app segue o tema claro/escuro do aparelho).
-const palette = {
-  light: { background: '#ffffff', text: '#111111', muted: '#666666', border: '#cccccc', error: '#b00020' },
-  dark: { background: '#000000', text: '#ffffff', muted: '#aaaaaa', border: '#333333', error: '#ff6b6b' },
-};
-
 export default function Index() {
-  const colors = palette[useColorScheme() === 'dark' ? 'dark' : 'light'];
+  const colors = useColors();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +45,12 @@ export default function Index() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Produtos</Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]}>Produtos</Text>
+        <Pressable onPress={() => supabase.auth.signOut()}>
+          <Text style={{ color: colors.primary }}>Sair</Text>
+        </Pressable>
+      </View>
 
       {loading && <ActivityIndicator style={styles.center} color={colors.muted} />}
 
@@ -83,7 +83,8 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 16 },
-  title: { fontSize: 28, fontWeight: '700', marginBottom: 16 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  title: { fontSize: 28, fontWeight: '700' },
   center: { marginTop: 32 },
   message: { marginTop: 16 },
   row: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
